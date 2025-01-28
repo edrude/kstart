@@ -9,8 +9,8 @@
 
 Name: kstart
 Summary: Kerberos kinit variants supporting ticket refreshing
-Version: 4.3
-Release: 2%{?dist}
+Version: 4.3.1
+Release: 1%{?dist}
 License: MIT
 Group: System Environment/Base
 URL: https://www.eyrie.org/~eagle/software/kstart/
