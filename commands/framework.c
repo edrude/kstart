@@ -473,6 +473,7 @@ run_framework(krb5_context ctx, struct config *config)
         if (config->command == NULL) {
             add_handler(ctx, config, exit_handler, SIGHUP, "SIGHUP");
             add_handler(ctx, config, exit_handler, SIGTERM, "SIGTERM");
+            add_handler(ctx, config, exit_handler, SIGWINCH, "SIGWINCH");
         }
         while (1) {
             if (config->command != NULL) {
