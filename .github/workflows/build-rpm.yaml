@@ -17,13 +17,13 @@ jobs:
     steps:
       - name: Install Dependencies
         run: |
-          #dnf install -y epel-release https://download.sinenomine.net/openafs/rpms/sna-openafs-release-latest.noarch.rpm
-          dnf install -y epel-release
+          dnf install -y epel-release https://download.sinenomine.net/openafs/rpms/sna-openafs-release-latest.noarch.rpm
+          #dnf install -y epel-release
 
             #krb5-devel openafs-devel openafs-authlibs-devel \
           dnf install -y \
             rpm-build redhat-rpm-config \
-            krb5-devel \
+            krb5-devel systemd-devel openafs-devel\
             gcc gcc-c++ make automake autoconf libtool \
             git wget tar gzip
 

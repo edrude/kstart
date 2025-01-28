@@ -64,6 +64,46 @@ AC_CHECK_FUNCS([krb5_get_renewed_creds], [],
 AC_LIBOBJ([krb5-extra])
 RRA_LIB_KRB5_RESTORE
 
+dnl Check for systemd support (sd-daemon.h, -lsystemd)
+
+AC_ARG_ENABLE([systemd],
+    AS_HELP_STRING([--disable-systemd],
+                   [Disable systemd integration (default: auto-detect)]),
+    [enable_systemd="$enableval"],
+    [enable_systemd="yes"])  dnl By default, we try to enable if found
+
+have_systemd="no"
+AS_IF([test "x$enable_systemd" != "xno"], [
+    dnl Check for the header file
+    AC_CHECK_HEADER([systemd/sd-daemon.h],
+        [ 
+          dnl If the header is present, check if we can link against libsystemd
+          AC_CHECK_LIB([systemd], [sd_notify], 
+              [ 
+                dnl Everything is good: define HAVE_SYSTEMD
+                AC_DEFINE([HAVE_SYSTEMD], [1], 
+                          [Define if systemd's sd-daemon is available])
+                have_systemd="yes"
+              ], 
+              [
+                AC_MSG_WARN([libsystemd found, but sd_notify symbol is missing.])
+              ]
+          )
+        ],
+        [ AC_MSG_WARN([systemd/sd-daemon.h not found; disabling systemd support.]) ]
+    )
+])
+
+AS_IF([test "x$have_systemd" = "xyes"], [
+    SYSTEMD_LIBS="-lsystemd"
+], [
+    SYSTEMD_LIBS=""
+])
+
+AC_SUBST([SYSTEMD_LIBS])
+
+AM_CONDITIONAL([WITH_SYSTEMD], [test "x$have_systemd" = "xyes"])
+
 dnl See if AFS setpag support is desired.
 rra_build_kafs=false
 AC_ARG_ENABLE([setpag],
