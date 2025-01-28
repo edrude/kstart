@@ -1,0 +1,67 @@
+name: Build kstart RPM on Rocky Linux 9
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: rockylinux:9
+    steps:
+      - name: Install Dependencies
+        run: |
+          #dnf install -y epel-release https://download.sinenomine.net/openafs/rpms/sna-openafs-release-latest.noarch.rpm
+          dnf install -y epel-release
+
+            #krb5-devel openafs-devel openafs-authlibs-devel \
+          dnf install -y \
+            rpm-build redhat-rpm-config \
+            krb5-devel \
+            gcc gcc-c++ make automake autoconf libtool \
+            git wget tar gzip
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set Up RPM Build Environment
+        run: |
+          useradd -m mockbuild
+          mkdir -p /home/mockbuild/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+          chown -R mockbuild:mockbuild /home/mockbuild/rpmbuild
+          echo '%_topdir /home/mockbuild/rpmbuild' > /home/mockbuild/.rpmmacros
+          chown mockbuild:mockbuild /home/mockbuild/.rpmmacros
+
+      - name: Create Source Tarball from Repository
+        run: |
+          VERSION=$(grep "^Version:" kstart.spec | awk '{print $2}')
+          REPO_NAME="kstart-${VERSION}"
+
+          # Create tarball from the repository contents
+          cd ..
+          tar czf "${REPO_NAME}.tar.gz" --transform "s,^kstart,${REPO_NAME}," kstart
+          mv "${REPO_NAME}.tar.gz" kstart/
+          cd kstart
+
+      - name: Move Spec File and Source Tarball into RPM Build Environment
+        run: |
+          VERSION=$(grep "^Version:" kstart.spec | awk '{print $2}')
+          cp kstart.spec /home/mockbuild/rpmbuild/SPECS/
+          cp kstart-${VERSION}.tar.gz /home/mockbuild/rpmbuild/SOURCES/
+          chown -R mockbuild:mockbuild /home/mockbuild/rpmbuild
+
+      - name: Build RPM Package
+        run: |
+          su - mockbuild -c "rpmbuild -ba /home/mockbuild/rpmbuild/SPECS/kstart.spec"
+
+      - name: Upload RPM Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: kstart-rpm
+          path: /home/mockbuild/rpmbuild/RPMS/**/*.rpm

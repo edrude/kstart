@@ -1,0 +1,62 @@
+name: Build RPM for kstart
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Select the branch to build from"
+        required: true
+        default: "main"
+        type: string
+
+jobs:
+  build-rpm:
+    runs-on: ubuntu-latest
+    container: 
+      image: rockylinux/rockylinux:9
+      options: --privileged --cap-add=SYS_ADMIN
+    #container: quay.io/centos/centos:stream9  # RHEL 9 equivalent
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      - name: Install dependencies
+        run: |
+          dnf install epel-release -y
+          yum install -y https://download.sinenomine.net/openafs/rpms/sna-openafs-release-latest.noarch.rpm
+          #dnf install -y openafs-authlibs-devel.x86_64 openafs-devel.x86_64 openafs-client kmod-openafs rpm-build redhat-rpm-config dnf-plugins-core mock krb5-devel
+          dnf install -y mock
+          dnf clean all && dnf makecache
+
+      - name: Set up mock for RHEL 9
+        run: |
+          useradd -m mockbuild
+          echo "config_opts['use_bootstrap_container'] = False" >> /etc/mock/rocky-9-x86_64.cfg
+          echo "config_opts['bootstrap_image'] = None" >> /etc/mock/rocky-9-x86_64.cfg
+          echo "config_opts['chroot_setup_cmd'] = 'install gcc gcc-c++ make automake autoconf rpm-devel redhat-rpm-config krb5-devel openafs-authlibs-devel openafs-devel openafs-client kmod-openafs'" >> /etc/mock/rocky-9-x86_64.cfg
+          mock --init --configdir=/etc/mock --root=rocky-9-x86_64
+
+      - name: Set up RPM build environment
+        run: |
+          mkdir -p ~/rpmbuild/{SOURCES,SPECS,BUILD,RPMS,SRPMS}
+          cp /root/kstart.spec ~/rpmbuild/SPECS/
+          curl -L -o ~/rpmbuild/SOURCES/kstart-4.3.tar.gz https://archives.eyrie.org/software/kerberos/kstart-4.3.tar.gz
+
+      - name: Build RPM
+        run: |
+          mock --configdir=/etc/mock --root=rhel-9-x86_64 --buildsrpm --spec ~/rpmbuild/SPECS/kstart.spec --sources ~/rpmbuild/SOURCES
+          mock --configdir=/etc/mock --root=rhel-9-x86_64 --rebuild ~/rpmbuild/SRPMS/kstart-4.3-2.src.rpm
+
+      - name: Move RPMs to workspace
+        run: |
+          mkdir -p ~/artifacts
+          cp -r /var/lib/mock/rhel-9-x86_64/result/*.rpm ~/artifacts/
+
+      - name: Upload RPM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: kstart-rpm-${{ github.event.inputs.branch }}
+          path: ~/artifacts/*.rpm

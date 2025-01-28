@@ -16,7 +16,7 @@ Group: System Environment/Base
 URL: https://www.eyrie.org/~eagle/software/kstart/
 Source: https://archives.eyrie.org/software/kerberos/%{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
-BuildRequires: krb5-devel
+BuildRequires:  gcc, make, automake, autoconf, libtool, krb5-devel
 Requires: krb5
 Vendor: Russ Allbery
 
@@ -32,11 +32,12 @@ single command.
 
 %prep
 %setup -q -n kstart-%{version}
+./bootstrap
 
 %build
 PATH="/sbin:/bin:/usr/sbin:/usr/bin:$PATH" \
-%configure --enable-setpag
-%{__make}
+%configure --with-aklog=/usr/bin/aklog --enable-setpag
+%make_build
 
 %install
 %makeinstall
