@@ -36,7 +36,7 @@ single command.
 
 %build
 PATH="/sbin:/bin:/usr/sbin:/usr/bin:$PATH" \
-%configure --with-aklog=/usr/bin/aklog --enable-setpag
+%configure --enable-setpag
 %make_build
 
 %install
@@ -52,6 +52,8 @@ PATH="/sbin:/bin:/usr/sbin:/usr/bin:$PATH" \
 %{_mandir}/*/*
 
 %changelog
+* Mon Aug 30 2021 Ed Rude <
+- Notify systemd of main pid if running as a systemd service of type notify
 * Mon Aug 30 2021 Russ Allbery <eagle@eyrie.org> 4.3-1
 - New version for 4.3 release.
 

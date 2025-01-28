@@ -447,20 +447,20 @@ run_framework(krb5_context ctx, struct config *config)
             write_pidfile(config->childfile, child);
         config->child = child;
     #ifdef HAVE_SYSTEMD
-    /* After spawning the child, notify systemd that MAINPID should be the child's PID. */
     {
-        char notify_buf[64];
-        /* Format: "MAINPID=<PID>" */
-        snprintf(notify_buf, sizeof(notify_buf), "MAINPID=%ld", (long) child);
+        if(getenv("NOTIFY_SOCKET") != NULL) {
+          char notify_buf[64];
+          snprintf(notify_buf, sizeof(notify_buf), "MAINPID=%ld", (long) child);
 
-        int ret = sd_notify(/* unset_environment= */ 0, notify_buf);
-        if (ret < 0) {
-            warn("sd_notify(MAINPID) failed: %s", strerror(-ret));
-        } else if (ret == 0) {
-            /* 0 means NOTIFY_SOCKET wasn't set or not accessible. */
-            warn("sd_notify(MAINPID) was not sent (NOTIFY_SOCKET not set?)");
-        }
-        /* ret > 0 => successfully queued the notification. */
+          int ret = sd_notify(/* unset_environment= */ 0, notify_buf);
+          if (ret < 0) {
+              warn("sd_notify(MAINPID) failed: %s", strerror(-ret));
+          } else if (ret == 0) {
+              /* 0 means NOTIFY_SOCKET wasn't set or not accessible. */
+              warn("sd_notify(MAINPID) was not sent (NOTIFY_SOCKET not set?)");
+          }
+          /* ret > 0 => successfully queued the notification. */
+      }
     }
     #endif
     }
