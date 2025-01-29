@@ -36,6 +36,9 @@
 #ifdef HAVE_LIBKEYUTILS
 #    include <keyutils.h>
 #endif
+#ifdef HAVE_SYSTEMD
+#include <systemd/sd-daemon.h>
+#endif
 #include <signal.h>
 #include <sys/stat.h>
 #ifdef HAVE_SYS_TIME_H
@@ -443,6 +446,22 @@ run_framework(krb5_context ctx, struct config *config)
         if (config->childfile != NULL)
             write_pidfile(config->childfile, child);
         config->child = child;
+        #ifdef HAVE_SYSTEMD
+        /* If NOTIFY_SOCKET env var is set, notify systemd of the main PID. */
+        if(getenv("NOTIFY_SOCKET") != NULL) {
+            char notify_buf[64];
+            snprintf(notify_buf, sizeof(notify_buf), "MAINPID=%ld", (long) child);
+
+            int ret = sd_notify(0, notify_buf);
+            if (ret < 0) {
+                syswarn("sd_notify(MAINPID) failed: %s", strerror(-ret));
+            } else if (ret == 0) {
+                /* 0 means NOTIFY_SOCKET wasn't set or not accessible. */
+                syswarn("sd_notify(MAINPID) was not sent (NOTIFY_SOCKET not set?)");
+            }
+            /* ret > 0 => successfully queued the notification. */
+        }
+        #endif
     }
 
     /* Loop if we're running as a daemon. */

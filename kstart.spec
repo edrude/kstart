@@ -9,15 +9,15 @@
 
 Name: kstart
 Summary: Kerberos kinit variants supporting ticket refreshing
-Version: 4.3
-Release: 2%{?dist}
+Version: 4.4.0
+Release: 1%{?dist}
 License: MIT
 Group: System Environment/Base
 URL: https://www.eyrie.org/~eagle/software/kstart/
 Source: https://archives.eyrie.org/software/kerberos/%{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires: krb5-devel
-Requires: krb5
+Requires: krb5-libs
 Vendor: Russ Allbery
 
 %description
@@ -32,6 +32,7 @@ single command.
 
 %prep
 %setup -q -n kstart-%{version}
+./bootstrap
 
 %build
 PATH="/sbin:/bin:/usr/sbin:/usr/bin:$PATH" \
@@ -51,6 +52,9 @@ PATH="/sbin:/bin:/usr/sbin:/usr/bin:$PATH" \
 %{_mandir}/*/*
 
 %changelog
+* Wed Jan 29 2025 Ed Rude <ed.rude@gmail.com> 4.4-1
+- New version for 4.4 release. sd_notify support added.
+
 * Mon Aug 30 2021 Russ Allbery <eagle@eyrie.org> 4.3-1
 - New version for 4.3 release.
 
