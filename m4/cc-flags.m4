@@ -99,6 +99,9 @@ dnl   -Wunreachable-code              Happens with optional compilation
 dnl   -Wunreachable-code-return       Other compilers get confused
 dnl   -Wunused-macros                 Often used on suppressed branches
 dnl   -Wused-but-marked-unused        Happens a lot with conditional code
+dnl   -Wno-unsafe-buffer-usage        New requirement? Suppress so old build works
+dnl   -Wno-switch-default             New requirement? Suppress so old build works
+dnl   -Wreserved-identifier           New requirement? Suppress so old build works
 dnl
 dnl Sets WARNINGS_CFLAGS as a substitution variable.
 AC_DEFUN([RRA_PROG_CC_WARNINGS_FLAGS],
@@ -110,7 +113,8 @@ AC_DEFUN([RRA_PROG_CC_WARNINGS_FLAGS],
          -Wno-sign-conversion -Wno-reserved-id-macro
          -Wno-tautological-pointer-compare -Wno-undef -Wno-unreachable-code
          -Wno-unreachable-code-return -Wno-unused-macros
-         -Wno-used-but-marked-unused],
+         -Wno-used-but-marked-unused -Wno-unsafe-buffer-usage
+         -Wno-switch-default -Wno-reserved-identifier],
         [RRA_PROG_CC_FLAG(flag,
             [WARNINGS_CFLAGS="${WARNINGS_CFLAGS} flag"])])],
     [WARNINGS_CFLAGS="-g -O2 -D_FORTIFY_SOURCE=2 -Werror"
@@ -125,7 +129,8 @@ AC_DEFUN([RRA_PROG_CC_WARNINGS_FLAGS],
          -Wno-sign-conversion -Wdate-time -Wjump-misses-init -Wlogical-op
          -Wstrict-prototypes -Wold-style-definition -Wmissing-prototypes
          -Wmissing-declarations -Wnormalized=nfc -Wpacked -Wredundant-decls
-         -Wrestrict -Wnested-externs -Winline -Wvla],
+         -Wrestrict -Wnested-externs -Winline -Wvla -Wno-use-after-free
+         -Wno-strict-overflow],
         [RRA_PROG_CC_FLAG(flag,
             [WARNINGS_CFLAGS="${WARNINGS_CFLAGS} flag"])])])
  AC_SUBST([WARNINGS_CFLAGS])])
