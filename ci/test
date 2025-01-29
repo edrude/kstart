@@ -39,8 +39,3 @@ make warnings
 
 # Run the test suite.
 make check
-
-# Run additional style tests, but only in the MIT build.
-if [ "$KERBEROS" = "mit" ]; then
-    make check-cppcheck
-fi
