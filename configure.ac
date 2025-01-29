@@ -74,6 +74,17 @@ AM_CONDITIONAL([NEED_KAFS], [test x"$rra_build_kafs" = xtrue])
 dnl Check if libkeyutils is available, used for kafs support.
 RRA_LIB_KEYUTILS_OPTIONAL
 
+AC_ARG_ENABLE([systemd],
+  [AS_HELP_STRING([--disable-systemd],
+    [Disable systemd integration (default: auto-detect)])],
+  [enable_systemd="$enableval"],
+  [enable_systemd="yes"])
+
+# Only call the macro if the user didn't forcefully disable systemd
+AS_IF([test "x$enable_systemd" != "xno"], [
+  RRA_LIB_SYSTEMD
+])
+
 dnl Other portability checks.
 AC_HEADER_STDBOOL
 AC_CHECK_HEADERS([strings.h sys/bitypes.h sys/select.h sys/time.h syslog.h])
